@@ -1,4 +1,4 @@
-class OutOfRangeError extends Error {
+ class OutOfRangeError extends Error {
       constructor(arg) {
         super();
         this.name = "OutOfRangeError";
@@ -20,18 +20,23 @@ class OutOfRangeError extends Error {
       try {
         const s = str.trim();
 
-        // Check for any invalid character (not digit, +, -, *, /, or space)
+        if (!s) {
+          throw new SyntaxError("Expression should not start with invalid operator");
+        }
+
+        // Check for invalid characters (not digit, +, -, *, /, or space)
         const badCharMatch = s.match(/[^0-9+\-*/\s]/);
         if (badCharMatch) {
           throw new OutOfRangeError(badCharMatch[0]);
         }
 
-        // Check for invalid operator combinations like ++, +/, /*, etc.
-        if (/[+\-*/][+\-*/]/.test(s)) {
+        // Check for invalid operator combinations: ++, +*, /*, etc.
+        const stripped = s.replace(/\s+/g, ""); // remove spaces
+        if (/[+\-*/][+\-*/]/.test(stripped)) {
           throw new InvalidExprError();
         }
 
-        // Should not start with +, *, /
+        // Should not start with +, *, / (but `-` allowed for negative)
         if (/^[+*/]/.test(s)) {
           throw new SyntaxError("Expression should not start with invalid operator");
         }
@@ -44,14 +49,13 @@ class OutOfRangeError extends Error {
         // Evaluate valid integer arithmetic expression
         return eval(s);
       } catch (error) {
-        // Re-throw the exact error as required
         throw error;
       }
     }
 
-    // 3. HTML UI logic
+    // 3. Bind to UI (with Cypress IDs)
 
-    const input = document.getElementById("expr");
+    const input = document.getElementById("input1");
     const resultDiv = document.getElementById("result");
     const button = document.getElementById("btn-eval");
 
