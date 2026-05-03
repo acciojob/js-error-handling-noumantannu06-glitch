@@ -1,53 +1,89 @@
-//your code here
-// 1. Custom error classes extending Error
-
 class OutOfRangeError extends Error {
-  constructor(arg) {
-    super();
-    this.name = "OutOfRangeError";
-    this.message = `Expression should only consist of integers and +-/* characters and not < ${arg} >`;
-  }
-}
-
-class InvalidExprError extends Error {
-  constructor() {
-    super();
-    this.name = "InvalidExprError";
-    this.message = "Expression should not have an invalid combination of expression";
-  }
-}
-
-// 2. evalString function with try-catch block
-
-function evalString(str) {
-  try {
-    const s = str.trim();
-
-    // Check for any invalid character (not digit, +, -, *, /, or space)
-    const badCharMatch = s.match(/[^0-9+\-*/\s]/);
-    if (badCharMatch) {
-      throw new OutOfRangeError(badCharMatch[0]);
+      constructor(arg) {
+        super();
+        this.name = "OutOfRangeError";
+        this.message = `Expression should only consist of integers and +-/* characters and not < ${arg} >`;
+      }
     }
 
-    // Check for invalid operator combinations like ++, +/, /*, etc.
-    if (/[+\-*/][+\-*/]/.test(s)) {
-      throw new InvalidExprError();
+    class InvalidExprError extends Error {
+      constructor() {
+        super();
+        this.name = "InvalidExprError";
+        this.message = "Expression should not have an invalid combination of expression";
+      }
     }
 
-    // Check: should not start with +, *, /
-    if (/^[+*/]/.test(s)) {
-      throw new SyntaxError("Expression should not start with invalid operator");
+    // 2. evalString function with try-catch block
+
+    function evalString(str) {
+      try {
+        const s = str.trim();
+
+        // Check for any invalid character (not digit, +, -, *, /, or space)
+        const badCharMatch = s.match(/[^0-9+\-*/\s]/);
+        if (badCharMatch) {
+          throw new OutOfRangeError(badCharMatch[0]);
+        }
+
+        // Check for invalid operator combinations like ++, +/, /*, etc.
+        if (/[+\-*/][+\-*/]/.test(s)) {
+          throw new InvalidExprError();
+        }
+
+        // Should not start with +, *, /
+        if (/^[+*/]/.test(s)) {
+          throw new SyntaxError("Expression should not start with invalid operator");
+        }
+
+        // Should not end with +, -, *, /
+        if (/[+\-*/]$/.test(s)) {
+          throw new SyntaxError("Expression should not end with invalid operator");
+        }
+
+        // Evaluate valid integer arithmetic expression
+        return eval(s);
+      } catch (error) {
+        // Re-throw the exact error as required
+        throw error;
+      }
     }
 
-    // Check: should not end with +, -, *, /
-    if (/[+\-*/]$/.test(s)) {
-      throw new SyntaxError("Expression should not end with invalid operator");
-    }
+    // 3. HTML UI logic
 
-    // Evaluate valid integer arithmetic expression
-    return eval(s);
-  } catch (error) {
-    // Re-throw the exact error as required
-    throw error;
-  }
-}
+    const input = document.getElementById("expr");
+    const resultDiv = document.getElementById("result");
+    const button = document.getElementById("btn-eval");
+
+    button.addEventListener("click", () => {
+      const expr = input.value;
+
+      resultDiv.innerHTML = "";
+
+      if (!expr.trim()) {
+        resultDiv.textContent = "Please enter an expression.";
+        return;
+      }
+
+      try {
+        const res = evalString(expr);
+        resultDiv.innerHTML = `<b>Result:</b> ${res}`;
+      } catch (error) {
+        if (error instanceof OutOfRangeError) {
+          resultDiv.innerHTML = `<b>OutOfRangeError:</b> ${error.message}`;
+        } else if (error instanceof InvalidExprError) {
+          resultDiv.innerHTML = `<b>InvalidExprError:</b> ${error.message}`;
+        } else if (error instanceof SyntaxError) {
+          resultDiv.innerHTML = `<b>SyntaxError:</b> ${error.message}`;
+        } else {
+          resultDiv.innerHTML = `<b>Unexpected Error:</b> ${error.message}`;
+        }
+      }
+    });
+
+    // Allow pressing Enter in the input
+    input.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        button.click();
+      }
+    });
